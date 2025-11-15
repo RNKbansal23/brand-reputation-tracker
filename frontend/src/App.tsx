@@ -23,7 +23,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 function App() {
   const [mentions, setMentions] = useState<Mention[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isFetching, setIsFetching] = useState<boolean>(false); // New state for loading indicator on buttons
+  const [isFetching, setIsFetching] = useState<boolean>(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -43,7 +43,6 @@ function App() {
     fetchDashboardData();
   }, []);
 
-  // NEW FUNCTION TO TRIGGER THE BACKEND WORKER
   const handleFetchBrand = async (brandName: string) => {
     try {
       setIsFetching(true);
@@ -52,8 +51,7 @@ function App() {
       if (!response.ok) throw new Error('Failed to fetch and store new mentions');
       const result = await response.json();
       console.log(result.message);
-      // After fetching, refresh the dashboard data
-      fetchDashboardData();
+      await fetchDashboardData(); // Refresh the dashboard data
     } catch (error) {
       console.error(`Error fetching for ${brandName}:`, error);
       alert(`An error occurred while fetching data for ${brandName}.`);
@@ -82,7 +80,6 @@ function App() {
         <h1>Brand Reputation Tracker</h1>
       </header>
       <main>
-        {/* NEW CONTROLS SECTION */}
         <div className="dashboard-card controls-container">
           <h3>Fetch New Mentions</h3>
           <p>Click a brand to fetch the latest articles. This may take a moment.</p>
@@ -100,10 +97,39 @@ function App() {
         </div>
 
         <div className="dashboard-grid">
-          {/* (Rest of the JSX is the same) */}
           <div className="dashboard-card chart-container"><SentimentPieChart data={sentimentCounts} /></div>
           <div className="dashboard-card chart-container"><VolumeChart mentions={mentions} /></div>
-          <div className="dashboard-card mentions-feed full-width">{/*...*/}</div>
+          
+          {/* === THE FIX IS HERE === */}
+          <div className="dashboard-card mentions-feed full-width">
+            <h2>Latest Mentions</h2>
+            {/* We are now READING the 'loading' variable, which fixes the error */}
+            {loading ? (
+              <p>Loading mentions...</p>
+            ) : mentions.length === 0 ? (
+              <p>No mentions found. Try fetching some data for a brand!</p>
+            ) : (
+              <ul>
+                {mentions.map((mention) => (
+                  <li key={mention._id} className="mention-card">
+                    <div className="mention-header">
+                      <span className="source-name">{mention.source_name}</span>
+                      {mention.sentiment && (
+                        <span className={`sentiment-badge sentiment-${mention.sentiment.label.toLowerCase()}`}>
+                          {mention.sentiment.label}
+                        </span>
+                      )}
+                    </div>
+                    <h3><a href={mention.url} target="_blank" rel="noopener noreferrer">{mention.title}</a></h3>
+                    <p>{mention.text}</p>
+                    <span className="publish-date">
+                      {new Date(mention.published_at).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </main>
     </div>
