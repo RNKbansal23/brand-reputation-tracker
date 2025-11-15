@@ -28,8 +28,8 @@ function App() {
     const fetchMentions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/api/dashboard-mentions');
-        if (!response.ok) {
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const response = await fetch(`${API_URL}/api/dashboard-mentions`);        if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
