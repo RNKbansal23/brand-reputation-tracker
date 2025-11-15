@@ -128,3 +128,36 @@ header h1 {
     grid-template-columns: 1fr; /* One column */
   }
 }
+/* Add to end of App.css */
+.controls-container {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #2b6cb0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button-group button:hover {
+  background-color: #2c5282;
+}
+
+.button-group button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
