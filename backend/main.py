@@ -12,7 +12,9 @@ app = FastAPI(title="Brand Tracker API")
 # to communicate with this backend.
 origins = [
     "http://localhost:5173",  # The default port for Vite React dev server
-    "http://localhost:3000",  # A common port for other React dev servers
+    "http://localhost:3000",
+    "https://brand-reputation-tracker-ten.vercel.app"
+      # A common port for other React dev servers
 ]
 
 app.add_middleware(
