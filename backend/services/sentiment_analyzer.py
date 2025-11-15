@@ -1,52 +1,38 @@
-import os
-import requests
-from dotenv import load_dotenv
-import time
+# We are using a built-in library now, no more external APIs.
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-load_dotenv()
+# This downloads the necessary data for NLTK the first time it runs.
+try:
+    nltk.data.find('sentiment/vader_lexicon.zip')
+except LookupError:
+    print("Downloading NLTK vader_lexicon...")
+    nltk.download('vader_lexicon')
 
-# NEW, more reliable model
-MODEL = "distilbert-base-uncased-finetuned-sst-2-english"
-API_URL = f"https://api-inference.huggingface.co/models/{MODEL}"
-HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
+# Create an instance of the analyzer
+sia = SentimentIntensityAnalyzer()
 
 def analyze_sentiment(text: str) -> dict:
-    if not HF_TOKEN:
-        print("Error: HUGGINGFACE_TOKEN not found.")
-        return {"label": "Error", "score": 0.0}
+    """
+    Analyzes sentiment using the built-in NLTK library.
+    This is reliable and does not depend on external APIs.
+    """
+    if not text:
+        return {"label": "Neutral", "score": 0.0}
 
-    truncated_text = text[:512]
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    payload = {"inputs": truncated_text}
+    # The sia.polarity_scores returns a dictionary with neg, neu, pos, and compound scores.
+    scores = sia.polarity_scores(text)
+    
+    # We use the 'compound' score to determine the overall sentiment.
+    compound_score = scores['compound']
+    
+    label = "Neutral"
+    if compound_score >= 0.05:
+        label = "Positive"
+    elif compound_score <= -0.05:
+        label = "Negative"
 
-    try:
-        response = requests.post(API_URL, headers=headers, json=payload)
-
-        if response.status_code == 503: # Handle model loading
-            print("Model is loading, retrying in 20 seconds...")
-            time.sleep(20)
-            response = requests.post(API_URL, headers=headers, json=payload)
-
-        response.raise_for_status()
-        data = response.json()
-        
-        # This new model has a simpler output format
-        highest_score_result = max(data[0], key=lambda x: x['score'])
-        
-        # Let's map the labels to our desired format
-        label_map = {
-            "POSITIVE": "Positive",
-            "NEGATIVE": "Negative",
-        }
-
-        return {
-            "label": label_map.get(highest_score_result['label'], 'Neutral'),
-            "score": highest_score_result['score']
-        }
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error calling Hugging Face API: {e}")
-        return {"label": "Error", "score": 0.0}
-    except (KeyError, IndexError) as e:
-        print(f"Error parsing Hugging Face API response: {e}, Response: {response.text}")
-        return {"label": "Error", "score": 0.0}
+    return {
+        "label": label,
+        "score": compound_score 
+    }

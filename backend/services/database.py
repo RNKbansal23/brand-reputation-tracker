@@ -1,7 +1,7 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import certifi # <-- ADD THIS IMPORT
+import certifi # This import is critical
 
 load_dotenv()
 
@@ -9,7 +9,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("MONGO_DB_NAME")
 COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
 
-# vvv MODIFY THIS LINE to include the tlsCAFile parameter vvv
+# This line uses certifi to solve the SSL error on Render
 client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 
 db = client[DB_NAME]
