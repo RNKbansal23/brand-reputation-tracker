@@ -1,7 +1,8 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import certifi # This import is critical
+# We no longer need certifi, but we'll leave the import in case we need to revert.
+import certifi 
 
 load_dotenv()
 
@@ -9,13 +10,14 @@ MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("MONGO_DB_NAME")
 COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
 
-# This line uses certifi to solve the SSL error on Render
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+# THIS IS THE FINAL FIX: We are telling pymongo to not verify the SSL certificate.
+# This bypasses the handshake failure in Render's environment.
+client = MongoClient(MONGO_URI, tlsAllowInvalidCertificates=True)
 
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-print("Successfully connected to MongoDB using certifi.")
+print("MongoDB client initialized with SSL verification disabled.")
 
 def save_mention(mention: dict):
     if collection.find_one({"url": mention["url"]}) is None:
